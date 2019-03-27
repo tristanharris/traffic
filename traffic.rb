@@ -2,17 +2,21 @@ require 'tk'
 
 class Car
 
+  attr_reader :x, :y
+
   def initialize()
     @direction = 2 * Math::PI * rand
     @x = 100 * rand
     @y = 100 * rand
     @speed = 10
     @element = nil
-    @steeringAngle = 0.1
+    @steeringAngle = 0
     @targetSpeed = 20
+    @scanRadius = 20
+    @inTraffic = false
   end
 
-  def tick(canvas)
+  def tick(canvas, cars)
     @x += Math.cos(@direction) * @speed / 10
     @y += Math.sin(@direction) * @speed / 10
     if @x < 0 || @y < 0 || @x > canvas.winfo_width || @y > canvas.winfo_height
@@ -25,11 +29,21 @@ class Car
     @direction = (@direction + (@steeringAngle / Math::PI)) % (2*Math::PI)
     @speed += 0.2 if (@speed < @targetSpeed)
     @speed -= 0.8 if (@speed > @targetSpeed)
+    inTraffic = false
+    cars.each do |car|
+      next if car == self
+      distance = Math::sqrt(((@x - car.x) ** 2) + ((@y - car.y) ** 2))
+      next if distance > @scanRadius
+      inTraffic = true
+    end
+    @steeringAngle = 0.2 if inTraffic && !@inTraffic
+    @steeringAngle = 0 if !inTraffic
+    @inTraffic = inTraffic
   end
 
   def render(canvas)
     canvas.delete(@element) if @element
-    @element = TkcLine.new(canvas, @x, @y, @x + Math.cos(@direction) * @speed / 10 , @y + Math.sin(@direction) * @speed / 10, :arrow => 'last', :width => 1, :fill => :yellow)
+    @element = TkcLine.new(canvas, @x, @y, @x + Math.cos(@direction) * @speed / 10 , @y + Math.sin(@direction) * @speed / 10, :arrow => 'last', :width => 1, :fill => @inTraffic ? :red : :yellow)
   end
 
 end
@@ -43,7 +57,7 @@ root.deiconify
 
 def render
   @cars.each do |c|
-    c.tick(@canvas)
+    c.tick(@canvas, @cars)
     c.render(@canvas)
   end
   Tk.after(25, proc { render } )
