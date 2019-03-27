@@ -8,6 +8,7 @@ class Car
     @y = 100 * rand
     @speed = 10
     @element = nil
+    @steeringAngle = 0.1
   end
 
   def tick(canvas)
@@ -20,6 +21,8 @@ class Car
       @x = canvas.winfo_width if @x > canvas.winfo_width
       @y = canvas.winfo_height if @y > canvas.winfo_height
     end
+    @direction = (@direction + (@steeringAngle / Math::PI)) % (2*Math::PI);
+
   end
 
   def render(canvas)
@@ -31,7 +34,7 @@ end
 
 root = TkRoot.new
 root.deiconify
-@canvas = TkCanvas.new(root, :bg => 'red', :highlightthickness => 0)
+@canvas = TkCanvas.new(root, :bg => 'black', :highlightthickness => 0)
 @canvas.pack(:fill => 'both', :expand => 1)
 
 @cars = (1..5).map {Car.new}
